@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>筛选结果 - OPC供需平台</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .phone {
+      width: 402px;
+      height: 874px;
+      background: #F5F0EB;
+      border-radius: 50px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 0 12px #222, 0 25px 70px rgba(0,0,0,0.6);
+    }
+
+    /* 顶部状态栏 */
+    .status-bar {
+      height: 48px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      padding: 0 28px 8px;
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .status-right { display: flex; align-items: center; gap: 4px; }
+
+    /* 搜索栏 */
+    .search-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 20px 14px;
+    }
+
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,0,0,0.06);
+      cursor: pointer;
+      flex-shrink: 0;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .search-box {
+      flex: 1;
+      height: 40px;
+      background: #fff;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      padding: 0 14px;
+      gap: 8px;
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .search-box input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 14px;
+      color: #333;
+      font-family: inherit;
+    }
+
+    .search-box input::placeholder { color: #bbb; }
+
+    .clear-btn {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ddd;
+      color: #fff;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 12px;
+      flex-shrink: 0;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .clear-btn.visible { opacity: 1; }
+
+    /* 筛选标题 */
+    .filter-header {
+      padding: 0 20px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .filter-label {
+      font-size: 11px;
+      color: #aaa;
+      letter-spacing: 1px;
+      margin-bottom: 2px;
+    }
+
+    .filter-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a1a;
+      letter-spacing: -0.5px;
+    }
+
+    .result-count {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      color: #666;
+      margin-top: 6px;
+      border: 1px solid rgba(0,0,0,0.04);
+    }
+
+    /* 已选条件 */
+    .active-filters {
+      display: flex;
+      gap: 8px;
+      padding: 0 20px 16px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .active-filters::-webkit-scrollbar { display: none; }
+
+    .active-filters::after {
+      content: '';
+      flex: 0 0 12px;
+    }
+
+    .filter-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+      border: none;
+      background: #2C2C2C;
+      color: #fff;
+    }
+
+    .filter-chip.light {
+      background: #fff;
+      color: #333;
+      border: 1px solid #E8E3DA;
+    }
+
+    .filter-chip.light svg {
+      display: none;
+    }
+
+    .filter-chip svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* 可滚动内容区 */
+    .scroll-content {
+      height: calc(874px - 48px - 54px - 62px - 38px - 80px);
+      overflow-y: auto;
+      scrollbar-width: none;
+      padding-bottom: 80px;
+    }
+
+    .scroll-content::-webkit-scrollbar { display: none; }
+
+    /* 筛选卡片 */
+    .filter-card {
+      margin: 0 20px 12px;
+      background: #fff;
+      border-radius: 20px;
+      padding: 16px 18px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+    }
+
+    .filter-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .filter-card-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .filter-card-hint {
+      font-size: 11px;
+      color: #bbb;
+    }
+
+    .filter-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .option-btn {
+      padding: 7px 16px;
+      border-radius: 50px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid #E8E3DA;
+      background: #fff;
+      color: #333;
+      font-family: inherit;
+    }
+
+    .option-btn.active {
+      background: #2C2C2C;
+      color: #fff;
+      border-color: #2C2C2C;
+    }
+
+    .option-btn svg {
+      width: 12px;
+      height: 12px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      margin-right: 4px;
+      vertical-align: middle;
+      display: inline-block;
+    }
+
+    /* 预览匹配 */
+    .preview-section {
+      padding: 8px 20px 0;
+    }
+
+    .preview-label {
+      font-size: 11px;
+      color: #aaa;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .preview-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.03);
+    }
+
+    .preview-tags {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .preview-tag {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .preview-tag.match { background: #FFE8D1; color: #C25E0A; }
+    .preview-tag.type { background: #2C2C2C; color: #fff; }
+
+    .preview-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+
+    .preview-keywords {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    /* 底部操作栏 */
+    .action-bar {
+      position: absolute;
+      bottom: 84px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      gap: 10px;
+      padding: 6px;
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.06);
+      z-index: 10;
+    }
+
+    .action-btn {
+      flex: 1;
+      height: 42px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #E8E3DA;
+      background: #fff;
+      color: #333;
+      font-family: inherit;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .action-btn.primary {
+      flex: 1.6;
+      background: #2C2C2C;
+      color: #fff;
+      border-color: #2C2C2C;
+    }
+
+    .action-btn svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* 底部 Tab Bar */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: #F5EFE2;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 6px;
+      border-top: 1px solid rgba(0,0,0,0.04);
+    }
+
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding-top: 6px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 50px;
+    }
+
+    .tab-item.center {
+      position: relative;
+      top: -18px;
+      flex: 1;
+    }
+
+    .tab-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .tab-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: #bbb;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .tab-item.active .tab-icon svg {
+      stroke: #1a1a1a;
+      fill: #1a1a1a;
+    }
+
+    .tab-label {
+      font-size: 10px;
+      color: #bbb;
+    }
+
+    .tab-item.active .tab-label {
+      color: #1a1a1a;
+      font-weight: 500;
+    }
+
+    .publish-btn {
+      width: 50px;
+      height: 50px;
+      background: #1a1a1a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border: 4px solid #F5F0EB;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    }
+
+    .publish-btn::before,
+    .publish-btn::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+      border-radius: 1px;
+    }
+
+    .publish-btn::before {
+      width: 18px;
+      height: 2.5px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    .publish-btn::after {
+      width: 2.5px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <!-- 状态栏 -->
+    <div class="status-bar">
+      <span>9:41</span>
+      <div class="status-right">
+        <svg width="18" height="12" viewBox="0 0 18 12"><path fill="#1a1a1a" d="M1 8h2v3H1zM5 6h2v5H5zM9 4h2v7H9zM13 2h2v9h-2z"/></svg>
+        <svg width="14" height="12" viewBox="0 0 14 12"><path fill="#1a1a1a" d="M2 3a5 5 0 0 1 10 0v6a5 5 0 0 1-10 0z"/></svg>
+        <svg width="26" height="12" viewBox="0 0 26 12"><rect x="1" y="1" width="22" height="10" rx="2.5" stroke="#1a1a1a" stroke-width="1.5" fill="none"/><rect x="3" y="3" width="18" height="6" rx="1.5" fill="#1a1a1a"/><path fill="#1a1a1a" d="M24 4.5a1.5 1.5 0 0 1 0 3z"/></svg>
+      </div>
+    </div>
+
+    <!-- 搜索栏 -->
+    <div class="search-header">
+      <div class="back-btn" onclick="alert('返回上一页')">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </div>
+      <div class="search-box">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#bbb" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" value="AI 设计" placeholder="搜索">
+        <button class="clear-btn" id="clearBtn" onclick="clearSearch()">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 筛选标题 -->
+    <div class="filter-header">
+      <div>
+        <div class="filter-label">筛选 \u00B7 FILTER</div>
+        <div class="filter-title">筛选结果</div>
+      </div>
+      <div class="result-count">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E89A3C" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        18 条
+      </div>
+    </div>
+
+    <!-- 已选条件 -->
+    <div class="active-filters" id="activeFilters">
+      <button class="filter-chip" data-group="type" data-value="悬赏" onclick="toggleFilter(this)">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        悬赏
+      </button>
+      <button class="filter-chip" data-group="location" data-value="远程" onclick="toggleFilter(this)">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+        远程
+      </button>
+      <button class="filter-chip light" data-group="time" data-value="7天内" onclick="toggleFilter(this)">7 天内</button>
+      <button class="filter-chip light" data-group="verify" data-value="认证" onclick="toggleFilter(this)">认证</button>
+    </div>
+
+    <!-- 可滚动内容 -->
+    <div class="scroll-content">
+      <!-- 供需类型 -->
+      <div class="filter-card">
+        <div class="filter-card-header">
+          <div class="filter-card-title">供需类型</div>
+          <div class="filter-card-hint">单选</div>
+        </div>
+        <div class="filter-options" id="supplyType">
+          <button class="option-btn active" data-single="supplyType" onclick="selectSingle(this, 'supplyType')">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>需求
+          </button>
+          <button class="option-btn" data-single="supplyType" onclick="selectSingle(this, 'supplyType')">供给</button>
+          <button class="option-btn" data-single="supplyType" onclick="selectSingle(this, 'supplyType')">互助</button>
+          <button class="option-btn" data-single="supplyType" onclick="selectSingle(this, 'supplyType')">场景机会</button>
+        </div>
+      </div>
+
+      <!-- 能力领域 -->
+      <div class="filter-card">
+        <div class="filter-card-header">
+          <div class="filter-card-title">能力领域</div>
+          <div class="filter-card-hint">可多选</div>
+        </div>
+        <div class="filter-options" id="ability">
+          <button class="option-btn active" onclick="toggleMulti(this)">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>AI
+          </button>
+          <button class="option-btn active" onclick="toggleMulti(this)">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>设计
+          </button>
+          <button class="option-btn" onclick="toggleMulti(this)">开发</button>
+          <button class="option-btn" onclick="toggleMulti(this)">内容</button>
+          <button class="option-btn" onclick="toggleMulti(this)">增长</button>
+          <button class="option-btn" onclick="toggleMulti(this)">咨询</button>
+        </div>
+      </div>
+
+      <!-- 预算/回报 -->
+      <div class="filter-card">
+        <div class="filter-card-header">
+          <div class="filter-card-title">预算 / 回报</div>
+          <div class="filter-card-hint">可多选</div>
+        </div>
+        <div class="filter-options" id="budget">
+          <button class="option-btn" onclick="toggleMulti(this)">资源置换</button>
+          <button class="option-btn active" onclick="toggleMulti(this)">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>3k-10k
+          </button>
+          <button class="option-btn" onclick="toggleMulti(this)">分成</button>
+          <button class="option-btn" onclick="toggleMulti(this)">算力额度</button>
+        </div>
+      </div>
+
+      <!-- 合作方式 -->
+      <div class="filter-card">
+        <div class="filter-card-header">
+          <div class="filter-card-title">合作方式</div>
+          <div class="filter-card-hint">可多选</div>
+        </div>
+        <div class="filter-options" id="cooperation">
+          <button class="option-btn active" onclick="toggleMulti(this)">
+            <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>可远程
+          </button>
+          <button class="option-btn" onclick="toggleMulti(this)">同城线下</button>
+          <button class="option-btn" onclick="toggleMulti(this)">短期</button>
+          <button class="option-btn" onclick="toggleMulti(this)">长期共创</button>
+        </div>
+      </div>
+
+      <!-- 预览匹配 -->
+      <div class="preview-section">
+        <div class="preview-label">预览匹配</div>
+        <div class="preview-card">
+          <div class="preview-tags">
+            <span class="preview-tag match">\u26A1 匹配 92%</span>
+            <span class="preview-tag type">悬赏</span>
+          </div>
+          <div class="preview-title">AI SaaS 需要品牌视觉与落地页</div>
+          <div class="preview-keywords">关键词命中：AI \u00B7 设计 \u00B7 远程 \u00B7 3k-10k</div>
+        </div>
+      </div>
+
+      <div style="height: 20px;"></div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="action-bar">
+      <button class="action-btn" onclick="resetFilters()">清除</button>
+      <button class="action-btn primary" onclick="viewResults()">
+        查看 18 条结果
+        <svg viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      </button>
+    </div>
+
+    <!-- 底部 Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        </div>
+        <div class="tab-label">发现</div>
+      </div>
+      <div class="tab-item active">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="tab-label">任务</div>
+      </div>
+      <div class="tab-item center">
+        <div class="publish-btn"></div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="tab-label">信息</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="tab-label">我的</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 搜索框交互
+    const searchInput = document.getElementById('searchInput');
+    const clearBtn = document.getElementById('clearBtn');
+
+    searchInput.addEventListener('input', function() {
+      clearBtn.classList.toggle('visible', this.value.length > 0);
+    });
+
+    // 初始化清除按钮状态
+    if (searchInput.value) clearBtn.classList.add('visible');
+
+    function clearSearch() {
+      searchInput.value = '';
+      clearBtn.classList.remove('visible');
+      searchInput.focus();
+    }
+
+    function createCheckSvg() {
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('viewBox', '0 0 24 24');
+      const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', '20 6 9 17 4 12');
+      svg.appendChild(polyline);
+      return svg;
+    }
+
+    // 单选切换
+    function selectSingle(btn, group) {
+      const container = document.getElementById(group);
+      container.querySelectorAll('.option-btn').forEach(b => {
+        b.classList.remove('active');
+        const svg = b.querySelector('svg');
+        if (svg) svg.remove();
+      });
+      btn.classList.add('active');
+      if (!btn.querySelector('svg')) {
+        btn.insertBefore(createCheckSvg(), btn.firstChild);
+      }
+    }
+
+    // 多选切换
+    function toggleMulti(btn) {
+      btn.classList.toggle('active');
+      const isActive = btn.classList.contains('active');
+      const svg = btn.querySelector('svg');
+      if (isActive && !svg) {
+        btn.insertBefore(createCheckSvg(), btn.firstChild);
+      } else if (!isActive && svg) {
+        svg.remove();
+      }
+    }
+
+    // 顶部已选条件 - 切换 light/dark
+    function toggleFilter(btn) {
+      btn.classList.toggle('light');
+      const isActive = !btn.classList.contains('light');
+      const svg = btn.querySelector('svg');
+      if (isActive && !svg) {
+        const checkSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        checkSvg.setAttribute('viewBox', '0 0 24 24');
+        const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+        polyline.setAttribute('points', '20 6 9 17 4 12');
+        checkSvg.appendChild(polyline);
+        btn.insertBefore(checkSvg, btn.firstChild);
+      } else if (!isActive && svg) {
+        svg.remove();
+      }
+    }
+
+    // 清除所有筛选
+    function resetFilters() {
+      // 重置顶部已选条件 - 全部取消
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.classList.add('light');
+        const svg = btn.querySelector('svg');
+        if (svg) svg.remove();
+      });
+
+      // 重置所有 option-btn - 全部取消
+      document.querySelectorAll('.option-btn').forEach(btn => {
+        btn.classList.remove('active');
+        const svg = btn.querySelector('svg');
+        if (svg) svg.remove();
+      });
+    }
+
+    // 查看结果
+    function viewResults() {
+      alert('查看 18 条筛选结果');
+    }
+
+    // Tab 切换
+    document.querySelectorAll('.tab-item:not(.center)').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>
