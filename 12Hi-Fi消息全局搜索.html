@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>全局搜索</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      background: #1a202c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .phone-frame {
+      width: 402px;
+      height: 874px;
+      background: #F5EFE2;
+      position: relative;
+      overflow: hidden;
+      border-radius: 48px;
+      border: 10px solid #f0ece6;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.35);
+    }
+
+    /* 底部 Tab Bar - 浅色 */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(245, 239, 226, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 6px;
+      border-top: 1px solid rgba(0,0,0,0.04);
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding-top: 6px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 50px;
+    }
+    .tab-item.center {
+      position: relative;
+      top: -18px;
+      flex: 1;
+    }
+    .tab-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: #999;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .tab-item.active .tab-icon svg {
+      stroke: #2D2D2D;
+      fill: #2D2D2D;
+    }
+    .tab-label {
+      font-size: 10px;
+      color: #999;
+    }
+    .tab-item.active .tab-label {
+      color: #2D2D2D;
+      font-weight: 500;
+    }
+    .publish-btn {
+      width: 50px;
+      height: 50px;
+      background: #2D2D2D;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #F5EFE2;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      position: relative;
+    }
+    .publish-btn::before,
+    .publish-btn::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .publish-btn::before {
+      width: 18px;
+      height: 2.5px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .publish-btn::after {
+      width: 2.5px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 分类标签 */
+    .filter-tab {
+      font-size: 13px;
+      color: rgba(0,0,0,0.35);
+      padding: 6px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      position: relative;
+    }
+    .filter-tab.active {
+      color: #2D2D2D;
+      font-weight: 500;
+    }
+    .filter-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #2D2D2D;
+      border-radius: 1px;
+    }
+
+    /* 历史记录项 */
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .history-item:active {
+      opacity: 0.7;
+    }
+    .history-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 推荐项 */
+    .recommend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .recommend-item:active {
+      opacity: 0.7;
+    }
+    .recommend-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* 媒体网格 */
+    .media-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .media-item {
+      aspect-ratio: 1;
+      background: rgba(255,255,255,0.5);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid rgba(0,0,0,0.03);
+    }
+    .media-item:active {
+      transform: scale(0.97);
+      background: rgba(255,255,255,0.8);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="flex items-center justify-between px-7 pt-4 pb-2">
+      <span class="text-sm font-semibold" style="color: #2D2D2D;">9:41</span>
+      <div class="flex items-center gap-1">
+        <div class="w-6 h-3 border rounded-sm relative" style="border-color: #2D2D2D;">
+          <div class="absolute inset-0.5 rounded-sm" style="background: #2D2D2D;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search Header -->
+    <div class="flex items-center gap-3 px-5 mb-2">
+      <button class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(255,255,255,0.7);">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24" style="color: #2D2D2D;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <div class="flex-1 flex items-center gap-2 px-4 py-2 rounded-full" style="background: rgba(255,255,255,0.7);">
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: rgba(0,0,0,0.3);">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <span class="text-sm" style="color: rgba(0,0,0,0.5);">全局搜索</span>
+      </div>
+      <button class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0" style="background: rgba(255,255,255,0.7);">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #666;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Filter Tabs -->
+    <div class="flex items-center gap-5 px-5 mb-4 overflow-x-auto hide-scrollbar" style="scrollbar-width: none;">
+      <div class="filter-tab active">最近</div>
+      <div class="filter-tab">成员</div>
+      <div class="filter-tab">频道</div>
+      <div class="filter-tab">媒体</div>
+      <div class="filter-tab">标注</div>
+      <div class="filter-tab">链接</div>
+      <div class="filter-tab">文件</div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="px-5 overflow-y-auto" style="height: calc(874px - 220px); scrollbar-width: none;">
+      <!-- 搜索历史记录 -->
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-sm font-semibold" style="color: #2D2D2D;">搜索历史记录</h3>
+        <button class="text-xs" style="color: rgba(0,0,0,0.35);">全部清除</button>
+      </div>
+
+      <div class="history-item">
+        <div class="history-icon">
+          <span class="text-lg" style="color: rgba(0,0,0,0.5);">#</span>
+        </div>
+        <div class="flex-1">
+          <p class="text-sm font-medium" style="color: #2D2D2D;">任务协作</p>
+          <p class="text-xs" style="color: rgba(0,0,0,0.35);">最后访问：今天 09:42</p>
+        </div>
+        <button class="w-8 h-8 rounded-full flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: rgba(0,0,0,0.25);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 推荐 -->
+      <h3 class="text-sm font-semibold mt-4 mb-2" style="color: #2D2D2D;">推荐</h3>
+
+      <div class="recommend-item">
+        <div class="recommend-icon">
+          <svg class="w-5 h-5" fill="none" stroke="#D4875A" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium" style="color: #2D2D2D;">公告</p>
+          <p class="text-xs" style="color: rgba(0,0,0,0.4);">培风社官方 · 2 条未读</p>
+        </div>
+      </div>
+
+      <div class="recommend-item">
+        <div class="recommend-icon">
+          <svg class="w-5 h-5" fill="none" stroke="#D4875A" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium" style="color: #2D2D2D;">项目群聊</p>
+          <p class="text-xs" style="color: rgba(0,0,0,0.4);">战队 · 本周提案冲刺</p>
+        </div>
+      </div>
+
+      <div class="recommend-item">
+        <div class="recommend-icon">
+          <svg class="w-5 h-5" fill="none" stroke="#D4875A" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div>
+          <p class="text-sm font-medium" style="color: #2D2D2D;">资源交换</p>
+          <p class="text-xs" style="color: rgba(0,0,0,0.4);">AI 工具共创 · 文件 12 个</p>
+        </div>
+      </div>
+
+      <!-- 照片与媒体 -->
+      <div class="flex items-center justify-between mt-5 mb-2">
+        <h3 class="text-sm font-semibold" style="color: #2D2D2D;">照片与媒体</h3>
+        <button class="text-xs" style="color: rgba(0,0,0,0.35);">查看所有</button>
+      </div>
+
+      <div class="media-grid">
+        <div class="media-item">
+          <div class="w-full h-full rounded-xl" style="background: #e8e0d4;"></div>
+        </div>
+        <div class="media-item">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: rgba(0,0,0,0.3);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="text-xs" style="color: rgba(0,0,0,0.4);">提案 v2.pdf</span>
+        </div>
+        <div class="media-item">
+          <div class="w-full h-full rounded-xl" style="background: #e8e0d4;"></div>
+        </div>
+        <div class="media-item">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: rgba(0,0,0,0.3);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="text-xs" style="color: rgba(0,0,0,0.4);">需求清单.md</span>
+        </div>
+        <div class="media-item">
+          <div class="w-full h-full rounded-xl" style="background: #e8e0d4;"></div>
+        </div>
+        <div class="media-item">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" style="color: rgba(0,0,0,0.3);">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span class="text-xs" style="color: rgba(0,0,0,0.4);">品牌指南.fig</span>
+        </div>
+      </div>
+
+      <div style="height: 100px;"></div>
+    </div>
+
+    <!-- 底部 Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        </div>
+        <div class="tab-label">发现</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="tab-label">任务</div>
+      </div>
+      <div class="tab-item center">
+        <div class="publish-btn"></div>
+      </div>
+      <div class="tab-item active">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="tab-label">信息</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="tab-label">我的</div>
+      </div>
+    </div>
+
+    <!-- Home Indicator -->
+    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 rounded-full" style="background: rgba(0,0,0,0.15);"></div>
+  </div>
+
+</body>
+</html>

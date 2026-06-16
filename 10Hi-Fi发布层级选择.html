@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>发布层级选择</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      background: #1a202c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .phone-frame {
+      width: 402px;
+      height: 874px;
+      background: #0f0f0f;
+      position: relative;
+      overflow: hidden;
+      border-radius: 48px;
+      border: 10px solid #1a1a1a;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.45);
+    }
+
+    /* 底部 Tab Bar - 深色 */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(20, 20, 20, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding-top: 6px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 50px;
+    }
+    .tab-item.center {
+      position: relative;
+      top: -18px;
+      flex: 1;
+    }
+    .tab-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: #777;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .tab-item.active .tab-icon svg {
+      stroke: #fff;
+      fill: #fff;
+    }
+    .tab-label {
+      font-size: 10px;
+      color: #777;
+    }
+    .tab-item.active .tab-label {
+      color: #fff;
+      font-weight: 500;
+    }
+    .publish-btn {
+      width: 50px;
+      height: 50px;
+      background: #2a2a2a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #c8c2ba;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .publish-btn::before,
+    .publish-btn::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .publish-btn::before {
+      width: 18px;
+      height: 2.5px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .publish-btn::after {
+      width: 2.5px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 选项卡片 */
+    .option-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 18px 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .option-card:active {
+      opacity: 0.85;
+      transform: scale(0.98);
+    }
+    .option-card.selected {
+      border: 1.5px solid rgba(100, 180, 120, 0.4);
+      background: rgba(255,255,255,0.06);
+    }
+
+    /* 标签 */
+    .tag-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 12px;
+      border-radius: 14px;
+      font-size: 11px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.5);
+    }
+    .tag-badge.highlight {
+      background: rgba(212, 135, 90, 0.15);
+      border-color: rgba(212, 135, 90, 0.3);
+      color: #D4875A;
+    }
+
+    /* 勾选图标 */
+    .check-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(100, 180, 120, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 发布按钮 */
+    .publish-action-btn {
+      background: rgba(245,240,235,0.95);
+      color: #1a1a1a;
+      padding: 14px 32px;
+      border-radius: 28px;
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      white-space: nowrap;
+    }
+    .publish-action-btn:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="flex items-center justify-between px-7 pt-4 pb-2">
+      <span class="text-sm font-semibold text-white">9:41</span>
+      <div class="flex items-center gap-1">
+        <div class="w-6 h-3 border border-white/50 rounded-sm relative">
+          <div class="absolute inset-0.5 bg-white rounded-sm"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 pt-2 pb-4">
+      <button class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(255,255,255,0.1);">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <span class="text-sm" style="color: rgba(255,255,255,0.5);">4 / 5</span>
+    </div>
+
+    <!-- Title -->
+    <div class="px-5 mb-6">
+      <p class="text-xs mb-2" style="color: rgba(255,255,255,0.4);">选择曝光方式</p>
+      <h1 class="text-2xl font-bold text-white leading-tight">让合适的人更快看到</h1>
+      <div class="w-48 h-1 rounded-full mt-3" style="background: rgba(255,255,255,0.85);"></div>
+    </div>
+
+    <!-- Option Cards -->
+    <div class="px-5 space-y-3">
+      <!-- 认证发布 - 选中 -->
+      <div class="option-card selected">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">认证发布</h3>
+          <div class="check-icon">
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+          </div>
+        </div>
+        <p class="text-sm leading-relaxed mb-2" style="color: rgba(255,255,255,0.6);">进入普通信息流，展示认证身份、标签和响应入口。</p>
+        <p class="text-xs" style="color: rgba(255,255,255,0.35);">适合：一般需求、互助、供给展示</p>
+      </div>
+
+      <!-- 付费优先 -->
+      <div class="option-card">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">付费优先</h3>
+          <span class="tag-badge">会员</span>
+        </div>
+        <p class="text-sm leading-relaxed mb-2" style="color: rgba(255,255,255,0.6);">获得更高排序权重、更多字段展示和推荐机会。</p>
+        <p class="text-xs" style="color: rgba(255,255,255,0.35);">适合：希望提高曝光的服务与项目</p>
+      </div>
+
+      <!-- 悬赏任务 -->
+      <div class="option-card">
+        <div class="flex items-start justify-between mb-2">
+          <h3 class="text-base font-semibold text-white">悬赏任务</h3>
+          <span class="tag-badge highlight">强激励</span>
+        </div>
+        <p class="text-sm leading-relaxed mb-2" style="color: rgba(255,255,255,0.6);">突出预算、截止时间、响应人数，适合快速匹配。</p>
+        <p class="text-xs" style="color: rgba(255,255,255,0.35);">适合：目标清楚、时效强的任务</p>
+      </div>
+    </div>
+
+    <!-- Publish Button -->
+    <div class="flex justify-end px-5 mt-5">
+      <button class="publish-action-btn">
+        发布到供需广场
+        <svg class="w-4 h-4" fill="none" stroke="#D4875A" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 底部 Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        </div>
+        <div class="tab-label">发现</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="tab-label">任务</div>
+      </div>
+      <div class="tab-item center">
+        <div class="publish-btn"></div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="tab-label">信息</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="tab-label">我的</div>
+      </div>
+    </div>
+
+    <!-- Home Indicator -->
+    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 rounded-full" style="background: rgba(255,255,255,0.2);"></div>
+  </div>
+
+</body>
+</html>

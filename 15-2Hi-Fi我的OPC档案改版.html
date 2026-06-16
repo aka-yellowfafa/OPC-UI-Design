@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>我的档案</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      background: #c8c2ba;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .phone-frame {
+      width: 402px;
+      height: 874px;
+      background: #F5EFE2;
+      position: relative;
+      overflow: hidden;
+      border-radius: 48px;
+      border: 10px solid #c8c2ba;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.15);
+      display: flex;
+      flex-direction: column;
+    }
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-bottom: 90px;
+    }
+    .scroll-content::-webkit-scrollbar { display: none; }
+
+    /* Tab Bar */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(245, 239, 226, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 6px;
+      border-top: 1px solid rgba(0,0,0,0.06);
+      z-index: 10;
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding-top: 6px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 50px;
+    }
+    .tab-item.center {
+      position: relative;
+      top: -18px;
+      flex: 1;
+    }
+    .tab-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: #777;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .tab-item.active .tab-icon svg {
+      stroke: #2D2D2D;
+      fill: #2D2D2D;
+    }
+    .tab-label {
+      font-size: 10px;
+      color: #777;
+    }
+    .tab-item.active .tab-label {
+      color: #2D2D2D;
+      font-weight: 500;
+    }
+    .publish-btn {
+      width: 50px;
+      height: 50px;
+      background: #2D2D2D;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #c8c2ba;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .publish-btn::before,
+    .publish-btn::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .publish-btn::before {
+      width: 18px;
+      height: 2.5px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .publish-btn::after {
+      width: 2.5px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* Card styles */
+    .card {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 12px;
+    }
+    .card-sm {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 14px;
+      padding: 14px 16px;
+    }
+
+    /* Tag styles */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 5px 12px;
+      border-radius: 16px;
+      font-size: 12px;
+      border: 1px solid rgba(0,0,0,0.1);
+      color: rgba(0,0,0,0.6);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .tag.dark {
+      background: #2D2D2D;
+      color: #fff;
+      border-color: #2D2D2D;
+    }
+    .tag.light {
+      background: transparent;
+      color: rgba(0,0,0,0.5);
+      border-color: rgba(0,0,0,0.15);
+    }
+    .tag.gray {
+      background: rgba(0,0,0,0.04);
+      color: rgba(0,0,0,0.5);
+      border-color: transparent;
+    }
+
+    /* Tab nav */
+    .tab-nav {
+      display: flex;
+      gap: 20px;
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+      padding-bottom: 2px;
+    }
+    .tab-nav-item {
+      font-size: 14px;
+      color: rgba(0,0,0,0.4);
+      padding-bottom: 10px;
+      cursor: pointer;
+      position: relative;
+      white-space: nowrap;
+    }
+    .tab-nav-item.active {
+      color: #2D2D2D;
+      font-weight: 500;
+    }
+    .tab-nav-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #2D2D2D;
+      border-radius: 1px;
+    }
+
+    /* Work item */
+    .work-item {
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.06);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 10px;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.2s;
+      flex-shrink: 0;
+    }
+    .icon-btn:active {
+      transform: scale(0.95);
+      background: rgba(0,0,0,0.04);
+    }
+    .icon-btn-sm {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(0,0,0,0.1);
+      background: #fff;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="flex items-center justify-between px-7 pt-4 pb-2 flex-shrink-0">
+      <span class="text-sm font-semibold" style="color: #2D2D2D;">9:41</span>
+      <div class="flex items-center gap-1">
+        <svg class="w-4 h-4" fill="currentColor" style="color:#2D2D2D" viewBox="0 0 24 24"><path d="M1 16h2v4H1zm4-6h2v10H5zm4-4h2v14H9zm4-2h2v16h-2zm4-2h2v18h-2z"/></svg>
+        <svg class="w-4 h-4" fill="currentColor" style="color:#2D2D2D" viewBox="0 0 24 24"><path d="M12 3c-4.8 0-9 3.86-9 9 0 2.12.74 4.07 1.97 5.61L3 21l3.39-1.97A8.93 8.93 0 0012 21c4.97 0 9-3.86 9-9s-4.03-9-9-9z"/></svg>
+        <div class="w-6 h-3 border rounded-sm relative" style="border-color: rgba(0,0,0,0.3);">
+          <div class="absolute inset-0.5 rounded-sm" style="background: #2D2D2D;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 pt-2 pb-2 flex-shrink-0">
+      <button class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(0,0,0,0.06);">
+        <svg class="w-5 h-5" fill="none" stroke="#2D2D2D" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <button class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(0,0,0,0.06);">
+        <svg class="w-5 h-5" fill="none" stroke="#D4875A" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="scroll-content px-5">
+      <!-- 用户信息区 -->
+      <div class="flex flex-col items-center pt-4 pb-3">
+        <div class="w-20 h-20 rounded-full flex items-center justify-center text-2xl font-medium text-white mb-3" style="background: #2D2D2D;">王</div>
+        <h1 class="text-xl font-semibold mb-1" style="color: #2D2D2D;">王一豪</h1>
+        <p class="text-sm mb-3" style="color: rgba(0,0,0,0.5);">OPC 主理人 · AI 产品 / UIUX</p>
+        <div class="flex items-center gap-2 mb-2">
+          <span class="tag dark" style="gap: 4px;">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+            </svg>
+            已认证
+          </span>
+          <span class="tag light">
+            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <rect x="3" y="4" width="18" height="16" rx="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 2v4M8 2v4M3 10h18"/>
+            </svg>
+            付费会员
+          </span>
+        </div>
+        <p class="text-xs" style="color: rgba(0,0,0,0.35);">可接短期项目</p>
+      </div>
+
+      <!-- 操作按钮行 -->
+      <div class="flex items-center gap-3 mb-4">
+        <button class="flex items-center gap-2 px-6 py-2.5 rounded-full" style="background: #2D2D2D; color: #fff;">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+          </svg>
+          <span class="text-sm font-medium">发消息</span>
+        </button>
+        <button class="flex items-center gap-2 px-5 py-2.5 rounded-full border" style="background: #fff; color: #2D2D2D; border-color: rgba(0,0,0,0.1);">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+          </svg>
+          <span class="text-sm font-medium">查看服务</span>
+        </button>
+        <button class="icon-btn">
+          <svg class="w-4 h-4" fill="none" stroke="#2D2D2D" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+        </button>
+        <button class="icon-btn">
+          <svg class="w-4 h-4" fill="none" stroke="#2D2D2D" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 统计卡片 -->
+      <div class="card flex items-center justify-around mb-4" style="padding: 20px 10px;">
+        <div class="text-center">
+          <p class="text-2xl font-bold mb-1" style="color: #2D2D2D;">91</p>
+          <p class="text-xs" style="color: rgba(0,0,0,0.5);">完整度</p>
+        </div>
+        <div class="text-center">
+          <p class="text-2xl font-bold mb-1" style="color: #2D2D2D;">6</p>
+          <p class="text-xs" style="color: rgba(0,0,0,0.5);">合作</p>
+        </div>
+        <div class="text-center">
+          <p class="text-2xl font-bold mb-1" style="color: #2D2D2D;">18</p>
+          <p class="text-xs" style="color: rgba(0,0,0,0.5);">响应</p>
+        </div>
+      </div>
+
+      <!-- Tab 导航 -->
+      <div class="tab-nav mb-4">
+        <div class="tab-nav-item active">作品</div>
+        <div class="tab-nav-item">动态</div>
+        <div class="tab-nav-item">产品</div>
+        <div class="tab-nav-item">评价</div>
+        <div class="tab-nav-item">服务</div>
+        <div class="tab-nav-item">关于</div>
+      </div>
+
+      <!-- 作品列表 -->
+      <div class="work-item">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-semibold mb-1" style="color: #2D2D2D;">OPC 供需平台信息架构</p>
+            <p class="text-xs mb-2" style="color: rgba(0,0,0,0.4);">移动端前台 · 2026</p>
+          </div>
+          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="#D4875A" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/>
+          </svg>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span class="tag gray">信息架构</span>
+          <span class="tag gray">供需整合</span>
+          <span class="tag gray">AI 结构化</span>
+        </div>
+      </div>
+
+      <div class="work-item">
+        <div class="flex items-start justify-between">
+          <div>
+            <p class="text-sm font-semibold mb-1" style="color: #2D2D2D;">AI 创业工具页面设计</p>
+            <p class="text-xs mb-2" style="color: rgba(0,0,0,0.4);">SaaS Landing · 2026</p>
+          </div>
+          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="#D4875A" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 17L17 7M17 7H7M17 7v10"/>
+          </svg>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <span class="tag gray">AI 产品</span>
+          <span class="tag gray">落地页</span>
+          <span class="tag gray">视觉设计</span>
+        </div>
+      </div>
+
+      <!-- 服务能力卡片 -->
+      <div class="card" style="margin-bottom: 12px;">
+        <div class="flex items-center gap-2 mb-2">
+          <svg class="w-4 h-4" fill="none" stroke="#2D2D2D" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          <span class="text-sm font-semibold" style="color: #2D2D2D;">服务能力</span>
+        </div>
+        <p class="text-xs" style="color: rgba(0,0,0,0.5);">产品设计 / AI 原型 / 信息架构 / 前台界面</p>
+      </div>
+
+      <!-- 2x2 小卡片 -->
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="card-sm">
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-4 h-4" fill="none" stroke="#2D2D2D" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <span class="text-sm font-semibold" style="color: #2D2D2D;">动态</span>
+          </div>
+          <p class="text-xs" style="color: rgba(0,0,0,0.4);">项目进展与设计过程</p>
+        </div>
+        <div class="card-sm">
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-4 h-4" fill="none" stroke="#2D2D2D" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+            <span class="text-sm font-semibold" style="color: #2D2D2D;">产品</span>
+          </div>
+          <p class="text-xs" style="color: rgba(0,0,0,0.4);">OPC 平台 / AI 工具</p>
+        </div>
+        <div class="card-sm">
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-4 h-4" fill="none" stroke="#2D2D2D" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+            </svg>
+            <span class="text-sm font-semibold" style="color: #2D2D2D;">评价</span>
+          </div>
+          <p class="text-xs" style="color: rgba(0,0,0,0.4);">6 次合作，暂无公开评价</p>
+        </div>
+        <div class="card-sm">
+          <div class="flex items-center gap-2 mb-1">
+            <svg class="w-4 h-4" fill="none" stroke="#2D2D2D" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span class="text-sm font-semibold" style="color: #2D2D2D;">关于</span>
+          </div>
+          <p class="text-xs" style="color: rgba(0,0,0,0.4);">远程 / 杭州 · 24h 内</p>
+        </div>
+      </div>
+
+      <!-- 底部留白 -->
+      <div style="height: 40px;"></div>
+    </div>
+
+    <!-- 底部 Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        </div>
+        <div class="tab-label">发现</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="tab-label">任务</div>
+      </div>
+      <div class="tab-item center">
+        <div class="publish-btn"></div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="tab-label">信息</div>
+      </div>
+      <div class="tab-item active">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="tab-label">我的</div>
+      </div>
+    </div>
+
+    <!-- Home Indicator -->
+    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 rounded-full" style="background: rgba(0,0,0,0.15);"></div>
+  </div>
+
+</body>
+</html>

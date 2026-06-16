@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>AI 解析确认</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      background: #1a202c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .phone-frame {
+      width: 402px;
+      height: 874px;
+      background: #0f0f0f;
+      position: relative;
+      overflow: hidden;
+      border-radius: 48px;
+      border: 10px solid #1a1a1a;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.45);
+    }
+
+    /* 底部 Tab Bar - 深色 */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(20, 20, 20, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding-top: 6px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 50px;
+    }
+    .tab-item.center {
+      position: relative;
+      top: -18px;
+      flex: 1;
+    }
+    .tab-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: #777;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .tab-item.active .tab-icon svg {
+      stroke: #fff;
+      fill: #fff;
+    }
+    .tab-label {
+      font-size: 10px;
+      color: #777;
+    }
+    .tab-item.active .tab-label {
+      color: #fff;
+      font-weight: 500;
+    }
+    .publish-btn {
+      width: 50px;
+      height: 50px;
+      background: #2a2a2a;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #c8c2ba;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .publish-btn::before,
+    .publish-btn::after {
+      content: '';
+      position: absolute;
+      background: #fff;
+      border-radius: 1px;
+    }
+    .publish-btn::before {
+      width: 18px;
+      height: 2.5px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .publish-btn::after {
+      width: 2.5px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 输入卡片 */
+    .input-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+    .input-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 6px;
+    }
+    .input-value {
+      font-size: 15px;
+      color: rgba(255,255,255,0.85);
+      line-height: 1.5;
+    }
+
+    /* 信息小卡片 */
+    .info-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 14px 16px;
+    }
+    .info-label {
+      font-size: 11px;
+      color: rgba(255,255,255,0.35);
+      margin-bottom: 6px;
+    }
+    .info-value {
+      font-size: 16px;
+      color: rgba(255,255,255,0.9);
+      font-weight: 500;
+    }
+
+    /* 标签 */
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+    }
+    .tag.active {
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    /* 底部按钮 */
+    .btn-dark {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.7);
+      padding: 14px 0;
+      border-radius: 28px;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      flex: 2;
+    }
+    .btn-dark:active {
+      background: rgba(255,255,255,0.12);
+      transform: scale(0.97);
+    }
+    .btn-light {
+      background: rgba(245,240,235,0.95);
+      color: #1a1a1a;
+      padding: 14px 0;
+      border-radius: 28px;
+      font-size: 14px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      white-space: nowrap;
+      flex: 3;
+    }
+    .btn-light:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="flex items-center justify-between px-7 pt-4 pb-2">
+      <span class="text-sm font-semibold text-white">9:41</span>
+      <div class="flex items-center gap-1">
+        <div class="w-6 h-3 border border-white/50 rounded-sm relative">
+          <div class="absolute inset-0.5 bg-white rounded-sm"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 pt-2 pb-4">
+      <button class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(255,255,255,0.1);">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <span class="text-sm" style="color: rgba(255,255,255,0.5);">3 / 5</span>
+    </div>
+
+    <!-- Title -->
+    <div class="px-5 mb-5">
+      <p class="text-xs mb-2" style="color: rgba(255,255,255,0.4);">AI 已整理</p>
+      <h1 class="text-2xl font-bold text-white leading-tight">确认对外展示的信息</h1>
+      <div class="w-48 h-1.5 rounded-full mt-4" style="background: rgba(255,255,255,0.08);">
+        <div class="h-1.5 rounded-full" style="width: 60%; background: rgba(255,255,255,0.85);"></div>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="px-5 space-y-3">
+      <!-- 标题输入 -->
+      <div class="input-card flex items-center justify-between">
+        <div>
+          <p class="input-label">标题</p>
+          <p class="input-value">AI 工具官网首屏与介绍页设计</p>
+        </div>
+        <button class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ml-3" style="background: rgba(255,255,255,0.08);">
+          <svg class="w-4 h-4" fill="none" stroke="#D4875A" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 摘要 -->
+      <div class="input-card">
+        <p class="input-label">摘要</p>
+        <p class="input-value">寻找懂 SaaS 和 AI 产品表达的设计师，本周完成官网首屏与功能介绍页初版，可远程协作。</p>
+      </div>
+
+      <!-- 信息卡片网格 -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="info-card">
+          <p class="info-label">预算</p>
+          <p class="info-value">3k-5k</p>
+        </div>
+        <div class="info-card">
+          <p class="info-label">周期</p>
+          <p class="info-value">本周</p>
+        </div>
+        <div class="info-card">
+          <p class="info-label">方式</p>
+          <p class="info-value">远程</p>
+        </div>
+        <div class="info-card">
+          <p class="info-label">状态</p>
+          <p class="info-value">待响应</p>
+        </div>
+      </div>
+
+      <!-- 标签 -->
+      <div class="input-card">
+        <p class="input-label mb-3">标签</p>
+        <div class="flex flex-wrap gap-2">
+          <span class="tag active">需求</span>
+          <span class="tag">设计</span>
+          <span class="tag">AI</span>
+          <span class="tag">SaaS</span>
+          <span class="tag">短期</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Buttons -->
+    <div class="flex items-center gap-3 px-5 mt-4 mb-2">
+      <button class="btn-dark">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+        </svg>
+        重整
+      </button>
+      <button class="btn-light">
+        <svg class="w-4 h-4" fill="none" stroke="#D4875A" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+        确认
+      </button>
+    </div>
+
+    <!-- 底部 Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        </div>
+        <div class="tab-label">发现</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="tab-label">任务</div>
+      </div>
+      <div class="tab-item center">
+        <div class="publish-btn"></div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="tab-label">信息</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="tab-label">我的</div>
+      </div>
+    </div>
+
+    <!-- Home Indicator -->
+    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 rounded-full" style="background: rgba(255,255,255,0.2);"></div>
+  </div>
+
+</body>
+</html>

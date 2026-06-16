@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>语音输入</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Noto Sans SC', system-ui, sans-serif;
+      background: #1a202c;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .phone-frame {
+      width: 402px;
+      height: 874px;
+      background: #0f0f0f;
+      position: relative;
+      overflow: hidden;
+      border-radius: 48px;
+      border: 10px solid #1a1a1a;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.45);
+    }
+
+    /* 底部 Tab Bar - 深色 */
+    .tab-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 80px;
+      background: rgba(20, 20, 20, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-start;
+      padding-top: 6px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .tab-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding-top: 6px;
+      cursor: pointer;
+      flex: 1;
+      min-width: 50px;
+    }
+    .tab-item.center {
+      position: relative;
+      top: -18px;
+      flex: 1;
+    }
+    .tab-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .tab-icon svg {
+      width: 22px;
+      height: 22px;
+      stroke: #777;
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .tab-item.active .tab-icon svg {
+      stroke: #fff;
+      fill: #fff;
+    }
+    .tab-label {
+      font-size: 10px;
+      color: #777;
+    }
+    .tab-item.active .tab-label {
+      color: #fff;
+      font-weight: 500;
+    }
+    .publish-btn {
+      width: 50px;
+      height: 50px;
+      background: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #1a1a1a;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+      position: relative;
+    }
+    .publish-btn::before,
+    .publish-btn::after {
+      content: '';
+      position: absolute;
+      background: #1a1a1a;
+      border-radius: 1px;
+    }
+    .publish-btn::before {
+      width: 18px;
+      height: 2.5px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    .publish-btn::after {
+      width: 2.5px;
+      height: 18px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+
+    /* 录音波形 */
+    .wave-bar {
+      width: 3px;
+      background: rgba(255,255,255,0.8);
+      border-radius: 2px;
+      animation: wave 1s ease-in-out infinite;
+    }
+    @keyframes wave {
+      0%, 100% { height: 8px; }
+      50% { height: 28px; }
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.05s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.15s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(6) { animation-delay: 0.25s; }
+    .wave-bar:nth-child(7) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(8) { animation-delay: 0.35s; }
+    .wave-bar:nth-child(9) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(10) { animation-delay: 0.45s; }
+    .wave-bar:nth-child(11) { animation-delay: 0.5s; }
+    .wave-bar:nth-child(12) { animation-delay: 0.55s; }
+    .wave-bar:nth-child(13) { animation-delay: 0.6s; }
+    .wave-bar:nth-child(14) { animation-delay: 0.65s; }
+    .wave-bar:nth-child(15) { animation-delay: 0.7s; }
+    .wave-bar:nth-child(16) { animation-delay: 0.75s; }
+    .wave-bar:nth-child(17) { animation-delay: 0.8s; }
+    .wave-bar:nth-child(18) { animation-delay: 0.85s; }
+    .wave-bar:nth-child(19) { animation-delay: 0.9s; }
+    .wave-bar:nth-child(20) { animation-delay: 0.95s; }
+
+    /* 辅助按钮 */
+    .action-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 13px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: transparent;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-chip:active {
+      background: rgba(255,255,255,0.08);
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="phone-frame">
+    <!-- Status Bar -->
+    <div class="flex items-center justify-between px-7 pt-4 pb-2">
+      <span class="text-sm font-semibold text-white">9:41</span>
+      <div class="flex items-center gap-1">
+        <div class="w-6 h-3 border border-white/50 rounded-sm relative">
+          <div class="absolute inset-0.5 bg-white rounded-sm"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between px-5 pt-2 pb-4">
+      <button class="w-10 h-10 rounded-full flex items-center justify-center" style="background: rgba(255,255,255,0.1);">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+        </svg>
+      </button>
+      <span class="text-sm" style="color: rgba(255,255,255,0.5);">2 / 5</span>
+    </div>
+
+    <!-- Title -->
+    <div class="px-5 mb-6">
+      <p class="text-xs mb-2" style="color: rgba(255,255,255,0.4);">自然表达</p>
+      <h1 class="text-2xl font-bold text-white leading-tight">像发语音一样说明你的需求</h1>
+      <div class="w-16 h-0.5 bg-white mt-3 rounded-full"></div>
+    </div>
+
+    <!-- Recording Card -->
+    <div class="mx-5 rounded-2xl p-4 mb-4" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-2 h-2 rounded-full" style="background: #D4875A;"></div>
+          <span class="text-xs" style="color: rgba(255,255,255,0.5);">正在录音</span>
+        </div>
+        <button class="w-9 h-9 rounded-full flex items-center justify-center" style="background: rgba(255,255,255,0.1);">
+          <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+            <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+          </svg>
+        </button>
+      </div>
+      <p class="text-3xl font-light text-white mb-4">00:37</p>
+      <!-- Waveform -->
+      <div class="flex items-center justify-between gap-1 mb-4 h-8">
+        <div class="wave-bar" style="height: 12px;"></div>
+        <div class="wave-bar" style="height: 20px;"></div>
+        <div class="wave-bar" style="height: 8px;"></div>
+        <div class="wave-bar" style="height: 24px;"></div>
+        <div class="wave-bar" style="height: 16px;"></div>
+        <div class="wave-bar" style="height: 28px;"></div>
+        <div class="wave-bar" style="height: 14px;"></div>
+        <div class="wave-bar" style="height: 22px;"></div>
+        <div class="wave-bar" style="height: 10px;"></div>
+        <div class="wave-bar" style="height: 26px;"></div>
+        <div class="wave-bar" style="height: 18px;"></div>
+        <div class="wave-bar" style="height: 12px;"></div>
+        <div class="wave-bar" style="height: 24px;"></div>
+        <div class="wave-bar" style="height: 16px;"></div>
+        <div class="wave-bar" style="height: 20px;"></div>
+        <div class="wave-bar" style="height: 8px;"></div>
+        <div class="wave-bar" style="height: 28px;"></div>
+        <div class="wave-bar" style="height: 14px;"></div>
+        <div class="wave-bar" style="height: 22px;"></div>
+        <div class="wave-bar" style="height: 10px;"></div>
+      </div>
+      <p class="text-sm leading-relaxed" style="color: rgba(255,255,255,0.7);">
+        我在做一个面向线下门店的 AI 选题工具，想找一位懂 SaaS 的设计师，本周先把官网首屏和功能介绍页跑出来...
+      </p>
+    </div>
+
+    <!-- Text Input Card -->
+    <div class="mx-5 rounded-2xl p-4 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <div class="flex items-center gap-2 mb-1">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: rgba(255,255,255,0.5);">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+        </svg>
+        <span class="text-sm text-white">也可以直接打字</span>
+      </div>
+      <p class="text-xs ml-6" style="color: rgba(255,255,255,0.35);">补充预算、时间、偏好的合作方式，AI 会一起整理。</p>
+    </div>
+
+    <!-- Action Chips -->
+    <div class="flex items-center gap-2 px-5 mb-6">
+      <button class="action-chip">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+        </svg>
+        上传附件
+      </button>
+      <button class="action-chip">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        加入案例
+      </button>
+      <button class="action-chip">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+        </svg>
+        保留原声
+      </button>
+    </div>
+
+    <!-- AI Button -->
+    <div class="absolute" style="bottom: 100px; right: 20px;">
+      <button class="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium" style="background: rgba(245,240,235,0.95); color: #1a1a1a; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="color: #D4875A;">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+        让 AI 整理
+      </button>
+    </div>
+
+    <!-- 底部 Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"/></svg>
+        </div>
+        <div class="tab-label">发现</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="tab-label">任务</div>
+      </div>
+      <div class="tab-item center">
+        <div class="publish-btn"></div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="tab-label">信息</div>
+      </div>
+      <div class="tab-item">
+        <div class="tab-icon">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="tab-label">我的</div>
+      </div>
+    </div>
+
+    <!-- Home Indicator -->
+    <div class="absolute bottom-1 left-1/2 -translate-x-1/2 w-28 h-1 rounded-full" style="background: rgba(255,255,255,0.2);"></div>
+  </div>
+
+</body>
+</html>
